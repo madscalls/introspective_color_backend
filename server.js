@@ -1,31 +1,33 @@
 require("dotenv").config();
 
-console.log("CLOUDINARY_CLOUD_NAME:", process.env.CLOUDINARY_CLOUD_NAME);
-
 const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
 
 const uploadsRouter = require("./routes/uploads");
+const authRouter = require("./routes/auth");
+const usersRouter = require("./routes/users");
+const auth = require("./middleware/auth");
 
 const app = express();
 const PORT = process.env.PORT || 3001;
 
-// middleware
-app.use(cors({ origin: "http://localhost:5173" }));
+const allowedOrigins = ["http://localhost:5173", "https://ic.oops.wtf"];
+
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      // allow tools like Postman/no-origin requests
+      if (!origin) return callback(null, true);
+
+      if (allowedOrigins.includes(origin)) return callback(null, true);
+
+      return callback(new Error(`CORS blocked for origin: ${origin}`));
+    },
+  }),
+);
 app.use(express.json());
 
-//configure
-const cloudinary = require("cloudinary").v2;
-
-cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET,
-  secure: true,
-});
-
-// MongoDB
 mongoose.connect("mongodb://localhost:27017/ic");
 
 mongoose.connection.on("connected", () => {
@@ -45,10 +47,17 @@ app.get("/health", (req, res) => {
   res.json({ ok: true });
 });
 
-// uploads
-app.use("/api/uploads", uploadsRouter);
+// ✅ public auth routes
+app.use("/api", authRouter); // /api/signup, /api/signin
 
-// start server
+// ✅ protected user routes
+app.use("/api/users", auth, usersRouter); // /api/users/me
+
+// uploads (pick one)
+app.use("/api/uploads", auth, uploadsRouter); // protected uploads
+// or leave public for now:
+// app.use("/api/uploads", uploadsRouter);
+
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });

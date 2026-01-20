@@ -7,4 +7,9 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
+const baseUrl =
+  process.env.NODE_ENV === "production"
+    ? "https://ic.oops.wtf"
+    : "http://localhost:3001";
+
 module.exports = cloudinary;
