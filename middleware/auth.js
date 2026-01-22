@@ -11,7 +11,7 @@ module.exports = (req, res, next) => {
 
   try {
     const payload = jwt.verify(token, process.env.JWT_SECRET);
-    req.user = payload; // payload will contain { _id: ... }
+    req.user = payload;
     return next();
   } catch (err) {
     return res.status(401).send({ message: "Invalid token" });

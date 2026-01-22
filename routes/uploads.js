@@ -3,17 +3,14 @@ const router = require("express").Router();
 const multer = require("multer");
 const cloudinary = require("../utils/cloudinary");
 
-// Keep uploads in memory (we stream directly to Cloudinary)
 const upload = multer({
   storage: multer.memoryStorage(),
   limits: { fileSize: 8 * 1024 * 1024 }, // 8MB
 });
 
 router.post("/images", upload.single("image"), async (req, res) => {
-  // Quick visibility that the route is being hit
   console.log("UPLOAD ROUTE HIT");
 
-  // Confirm we actually received a file
   console.log("has file?", !!req.file);
   if (req.file) {
     console.log("mimetype:", req.file.mimetype, "size:", req.file.size);
@@ -26,7 +23,6 @@ router.post("/images", upload.single("image"), async (req, res) => {
     }
 
     const result = await new Promise((resolve, reject) => {
-      // This is the Cloudinary upload stream
       const stream = cloudinary.uploader.upload_stream(
         {
           folder: "introspective-color",
@@ -38,7 +34,7 @@ router.post("/images", upload.single("image"), async (req, res) => {
         }
       );
 
-      // Send the file buffer into the stream
+   
       stream.end(req.file.buffer);
     });
 
@@ -50,8 +46,7 @@ router.post("/images", upload.single("image"), async (req, res) => {
       format: result.format,
     });
   } catch (err) {
-    // ✅ DEV-FRIENDLY ERROR RESPONSE (so you can see it in Network → Response)
-    console.error("UPLOAD ERROR:", err);
+       console.error("UPLOAD ERROR:", err);
 
     return res.status(500).send({
       message: "Upload failed",

@@ -17,7 +17,6 @@ const allowedOrigins = ["http://localhost:5173", "https://ic.oops.wtf"];
 app.use(
   cors({
     origin: (origin, callback) => {
-      // allow tools like Postman/no-origin requests
       if (!origin) return callback(null, true);
 
       if (allowedOrigins.includes(origin)) return callback(null, true);
@@ -47,16 +46,11 @@ app.get("/health", (req, res) => {
   res.json({ ok: true });
 });
 
-// ✅ public auth routes
 app.use("/api", authRouter); // /api/signup, /api/signin
 
-// ✅ protected user routes
 app.use("/api/users", auth, usersRouter); // /api/users/me
 
-// uploads (pick one)
 app.use("/api/uploads", auth, uploadsRouter); // protected uploads
-// or leave public for now:
-// app.use("/api/uploads", uploadsRouter);
 
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
