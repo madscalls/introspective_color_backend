@@ -1,8 +1,6 @@
 const mongoose = require("mongoose");
 const validator = require("validator");
 
-const mongoose = require("mongoose");
-
 const postSchema = new mongoose.Schema(
   {
     imageUrl: { type: String, required: true },
