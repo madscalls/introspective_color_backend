@@ -61,7 +61,7 @@ app.get("/health", (req, res) => {
 app.use("/api", authRouter);
 app.use("/api/users", auth, usersRouter);
 app.use("/api/uploads", auth, uploadsRouter);
-app.use("/api/posts", auth, postsRouter);
+app.use("/api/posts", postsRouter);
 
 app.use((err, req, res, next) => {
   if (err?.message === "CORS blocked") {
