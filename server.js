@@ -5,6 +5,7 @@ const mongoose = require("mongoose");
 const cors = require("cors");
 
 const uploadsRouter = require("./routes/uploads");
+const postsRouter = require("./routes/posts");
 const authRouter = require("./routes/auth");
 const usersRouter = require("./routes/users");
 const auth = require("./middleware/auth");
@@ -22,14 +23,13 @@ const allowedOrigins = [
 app.use(
   cors({
     origin: (origin, callback) => {
+      // allow curl/postman/server-to-server (no Origin header)
       if (!origin) return callback(null, true);
 
-      if (allowedOrigins.includes(origin)) {
-        return callback(null, true);
-      }
+      if (allowedOrigins.includes(origin)) return callback(null, true);
 
       console.error("CORS blocked for origin:", origin);
-      return callback(new Error("Not allowed by CORS"));
+      return callback(new Error("CORS blocked"));
     },
     credentials: true,
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
@@ -57,15 +57,19 @@ app.get("/health", (req, res) => {
   res.json({ ok: true });
 });
 
+// routes
 app.use("/api", authRouter);
 app.use("/api/users", auth, usersRouter);
 app.use("/api/uploads", auth, uploadsRouter);
+app.use("/api/posts", auth, postsRouter);
 
 app.use((err, req, res, next) => {
-  if (err?.message?.startsWith("CORS blocked")) {
-    return res.status(403).send({ message: err.message });
+  if (err?.message === "CORS blocked") {
+    return res.status(403).send({ message: "Not allowed by CORS" });
   }
-  return next(err);
+
+  console.error("SERVER ERROR:", err);
+  return res.status(500).send({ message: "Server error" });
 });
 
 app.listen(PORT, () => {
