@@ -2,7 +2,7 @@ const router = require("express").Router();
 const Post = require("../models/Post");
 const auth = require("../middleware/auth");
 
-// GET /api/posts?color=red  (PUBLIC)
+// GET /api/posts?color=red   (PUBLIC)
 router.get("/", async (req, res) => {
   try {
     const { color } = req.query;
@@ -18,7 +18,7 @@ router.get("/", async (req, res) => {
   }
 });
 
-// POST /api/posts  (PROTECTED)
+// POST /api/posts   (PROTECTED)
 router.post("/", auth, async (req, res) => {
   try {
     const { imageUrl, publicId = "", color, hashtags = [] } = req.body;
@@ -27,16 +27,20 @@ router.post("/", auth, async (req, res) => {
       return res.status(400).send({ message: "imageUrl required" });
     if (!color) return res.status(400).send({ message: "color required" });
 
-    let tags = [];
+    let tags = hashtags;
     if (typeof hashtags === "string") {
       tags = hashtags
         .split(/\s+/)
-        .map((t) => t.replace(/^#/, "").toLowerCase())
-        .filter(Boolean);
+        .map((t) => t.trim())
+        .filter(Boolean)
+        .map((t) => t.replace(/^#/, "").toLowerCase());
     } else if (Array.isArray(hashtags)) {
       tags = hashtags
-        .map((t) => String(t).replace(/^#/, "").toLowerCase())
-        .filter(Boolean);
+        .map((t) => String(t).trim())
+        .filter(Boolean)
+        .map((t) => t.replace(/^#/, "").toLowerCase());
+    } else {
+      tags = [];
     }
 
     const post = await Post.create({
