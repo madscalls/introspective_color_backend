@@ -1,4 +1,5 @@
 const router = require("express").Router();
+const mongoose = require("mongoose");
 const Post = require("../models/Post");
 const auth = require("../middleware/auth");
 
@@ -6,7 +7,6 @@ const auth = require("../middleware/auth");
 router.get("/", async (req, res) => {
   try {
     const { color } = req.query;
-
     const filter = {};
     if (color) filter.color = color;
 
@@ -27,7 +27,7 @@ router.post("/", auth, async (req, res) => {
       return res.status(400).send({ message: "imageUrl required" });
     if (!color) return res.status(400).send({ message: "color required" });
 
-    let tags = hashtags;
+    let tags = [];
     if (typeof hashtags === "string") {
       tags = hashtags
         .split(/\s+/)
@@ -39,8 +39,6 @@ router.post("/", auth, async (req, res) => {
         .map((t) => String(t).trim())
         .filter(Boolean)
         .map((t) => t.replace(/^#/, "").toLowerCase());
-    } else {
-      tags = [];
     }
 
     const post = await Post.create({
@@ -48,12 +46,38 @@ router.post("/", auth, async (req, res) => {
       publicId,
       color,
       hashtags: tags,
+      owner: req.user._id, // ✅ attach owner
     });
 
     return res.status(201).send(post);
   } catch (err) {
     console.error("CREATE POST ERROR:", err);
     return res.status(500).send({ message: "Failed to create post" });
+  }
+});
+
+// DELETE /api/posts/:postId   (PROTECTED + OWNER ONLY)
+router.delete("/:postId", auth, async (req, res) => {
+  try {
+    const { postId } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(postId)) {
+      return res.status(400).send({ message: "Invalid postId" });
+    }
+
+    const post = await Post.findById(postId);
+    if (!post) return res.status(404).send({ message: "Post not found" });
+
+    // owner check
+    if (String(post.owner) !== String(req.user._id)) {
+      return res.status(403).send({ message: "Forbidden" });
+    }
+
+    await Post.findByIdAndDelete(postId);
+    return res.send({ message: "Post deleted" });
+  } catch (err) {
+    console.error("DELETE POST ERROR:", err);
+    return res.status(500).send({ message: "Failed to delete post" });
   }
 });
 
