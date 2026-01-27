@@ -56,7 +56,6 @@ app.get("/health", (req, res) => {
   res.json({ ok: true });
 });
 
-// routes
 app.use("/api", authRouter);
 app.use("/api/users", auth, usersRouter);
 app.use("/api/uploads", auth, uploadsRouter);
@@ -64,11 +63,13 @@ app.use("/api/posts", postsRouter);
 
 app.use((err, req, res, next) => {
   if (err?.message === "CORS blocked") {
-    return res.status(403).send({ message: "Not allowed by CORS" });
+    res.status(403).send({ message: "Not allowed by CORS" });
+    return next();
   }
 
   console.error("SERVER ERROR:", err);
-  return res.status(500).send({ message: "Server error" });
+  res.status(500).send({ message: "Server error" });
+  return next();
 });
 
 app.listen(PORT, () => {

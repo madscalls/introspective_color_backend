@@ -1,4 +1,3 @@
-// utils/cloudinary.js
 const cloudinary = require("cloudinary").v2;
 
 cloudinary.config({
@@ -6,10 +5,5 @@ cloudinary.config({
   api_key: process.env.CLOUDINARY_API_KEY,
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
-
-const baseUrl =
-  process.env.NODE_ENV === "production"
-    ? "https://ic.oops.wtf"
-    : "http://localhost:3001";
 
 module.exports = cloudinary;
