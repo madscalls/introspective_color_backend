@@ -45,12 +45,14 @@ router.post("/", auth, validateCreatePost, async (req, res) => {
         .map((t) => t.replace(/^#/, "").toLowerCase());
     }
 
+    tags = Array.from(new Set(tags)).slice(0, 20);
+
     const post = await Post.create({
       imageUrl,
       publicId,
       color,
       hashtags: tags,
-      owner: req.user._id, // ✅ attach owner
+      owner: req.user._id,
     });
 
     return res.status(201).send(post);
